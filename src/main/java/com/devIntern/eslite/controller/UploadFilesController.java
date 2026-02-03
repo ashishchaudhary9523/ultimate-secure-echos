@@ -51,29 +51,77 @@ public class UploadFilesController {
 
 
     @GetMapping("/get-file")
-    public ResponseEntity<?> getFiles( @RequestParam("key") @NotEmpty
-                                           @Size(min = 16 , max = 16 , message = "The key must be of 16 chars") String key){
-        Optional<UploadFiles> optionalfile = null;
+    public ResponseEntity<?> getFiles(
+            @RequestParam("key") @NotEmpty
+            @Size(min = 16, max = 16) String key) {
+
+        Optional<UploadFiles> optionalFile;
         try {
-            optionalfile = shareOneFileService.downloadFile(key);
+            optionalFile = shareOneFileService.downloadFile(key);
         } catch (Exception e) {
-            return new ResponseEntity<>("Server Error, Unable to download file.", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Server Error, Unable to download file.");
         }
-        if(optionalfile.isEmpty()){
-            return new ResponseEntity<>("File Not Found.", HttpStatus.NOT_FOUND);
+
+        if (optionalFile.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("File Not Found.");
         }
-        UploadFiles file = optionalfile.get();
-        try {
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION ,
-                            "attachment; filename=\"" + file.getFileName() + "\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(file.getFileSize())
-                    .body(file.getFileContent());
-        } catch (Exception e) {
-            return new ResponseEntity<>("Server Error, Unable to download file.", HttpStatus.INTERNAL_SERVER_ERROR);
+
+        UploadFiles file = optionalFile.get();
+
+//        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+//        if (file.getFileType() != null) {
+//            mediaType = MediaType.parseMediaType(file.getFileType());
+//        }
+//
+//        return ResponseEntity.ok()
+//                .contentType(mediaType)
+//                .header(HttpHeaders.CONTENT_DISPOSITION,
+//                        "attachment; filename=\"" + file.getFileName() + "\"")
+//                .contentLength(file.getFileSize())
+//                .body(file.getFileContent());
+
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (file.getFileType() != null && !file.getFileType().isBlank()) {
+            mediaType = MediaType.parseMediaType(file.getFileType());
         }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + file.getFileName() + "\"")
+                .contentLength(file.getFileSize())
+                .body(file.getFileContent());
+
     }
+
+
+
+//    @GetMapping("/get-file")
+//    public ResponseEntity<?> getFiles( @RequestParam("key") @NotEmpty
+//                                           @Size(min = 16 , max = 16 , message = "The key must be of 16 chars") String key){
+//        Optional<UploadFiles> optionalfile = null;
+//        try {
+//            optionalfile = shareOneFileService.downloadFile(key);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>("Server Error, Unable to download file.", HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//        if(optionalfile.isEmpty()){
+//            return new ResponseEntity<>("File Not Found.", HttpStatus.NOT_FOUND);
+//        }
+//        UploadFiles file = optionalfile.get();
+//        try {
+//            return ResponseEntity.ok()
+//                    .header(HttpHeaders.CONTENT_DISPOSITION ,
+//                            "attachment; filename=\"" + file.getFileName() + "\"")
+//                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+//                    .contentLength(file.getFileSize())
+//                    .body(file.getFileContent());
+//        } catch (Exception e) {
+//            return new ResponseEntity<>("Server Error, Unable to download file.", HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteFiles( @RequestParam("key") @NotEmpty
